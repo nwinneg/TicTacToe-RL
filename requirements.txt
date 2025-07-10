@@ -1,0 +1,6 @@
+# Core dependencies
+numpy
+matplotlib
+
+# Add additional dependencies here as needed
+# Example: matplotlib

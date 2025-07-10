@@ -1,0 +1,23 @@
+# Specifies the build system used to install your project
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]  # Required build dependencies
+build-backend = "setuptools.build_meta"   # Tells Python to use setuptools for building
+
+# Metadata and dependencies for your project
+[project]
+name = "tictactoe-rl"                     # Name used in package distribution
+version = "0.1.0"                         # Initial version number
+description = "Reinforcement Learning agents for Tic Tac Toe."  # Short description
+authors = [
+    { name = "Nate Winneg" }    # Replace with your details
+]
+license = { text = "MIT" }                # License type
+readme = "README.md"                      # Long description (shown on PyPI, etc.)
+requires-python = ">=3.8"                 # Minimum Python version
+dependencies = [
+    "numpy",                              # Only core dependency for now
+]
+
+# Optional: URLs that appear on PyPI or GitHub
+[project.urls]
+Homepage = "https://github.com/yourusername/TicTacToe-RL"  # Update as needed
