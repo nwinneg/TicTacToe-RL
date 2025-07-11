@@ -2,7 +2,7 @@
 tictactoe_rl
 ============
 
-A Python package implementing reinforcement learning agents and utilities
+A Python package for training reinforcement learning agents automatically using adversarial techniques
 for the Tic Tac Toe game.
 """
 

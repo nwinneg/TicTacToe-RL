@@ -1,17 +1,10 @@
 import numpy as np
-import os
 import yaml
 import ast
+import board
 import tomli
+import os
 from pathlib import Path
-
-
-# Function to check if a directory exists
-def dirExists(dirPath):
-    if os.path.isdir(dirPath):
-        return True
-    else:
-        return False
 
 # Initialize value function
 def initValueFunction():
@@ -58,7 +51,7 @@ def initValueFunction():
             nextState = curStateNum.copy()
             nextState[space] = curActor
             nextStateStr = str(nextState).replace(" ","")
-            winner = threeAcross(nextStateStr)
+            winner = board.threeAcross(nextStateStr)
             if winner == 1: # The agent won
                 subDict[nextStateStr] = 1
                 winningStates.add(nextStateStr)
@@ -85,29 +78,7 @@ def initValueFunction():
 
         visitedStates.add((curStateStr,curActor))
 
-    # print("Visited states: {}",len(visitedStates))
-    # print("Winning states: {}",len(winningStates))
-    # print("Losing states:  {}",len(losingStates))
-    # print("Tie states:     {}",len(tieStates))
-    # print("Total states:   {}",len(visitedStates)+len(winningStates)+len(losingStates)+len(tieStates))
     return valueFunction
-
-def countWinningStates(valueFunction):
-    keyList = list(valueFunction.keys())
-    totalWins = 0
-    for key in keyList:
-        values = list(valueFunction[key]['actions'].values())
-        totalWins += values.count(0)
-    print("Total wins: {}".format(totalWins))
-
-def showBoard(boardStr):
-    boardNum = ast.literal_eval(boardStr)
-    print(np.array(boardNum).reshape(3,3))
-
-# Write value function dictionary to yaml file
-def writeValueFunction(valueFunction,fileName):
-    with open(fileName,'w') as file:
-        yaml.dump(valueFunction,file,default_flow_style=False)
 
 # Load value function dictionary from file
 def loadValueFunction(valFunPath):
@@ -116,36 +87,17 @@ def loadValueFunction(valFunPath):
         valueFunction = yaml.safe_load(file)
     return valueFunction
 
-# Function to check if there are 3 across - We can win on a row, a column, or one of the diagonals
-def threeAcross(boardStateString): # Returns winner (-1 or 1) if there is a winner, otherwise returns None
-    # Reformat as a matrix
-    boardArr = ast.literal_eval(boardStateString)
-    boardMat = np.array(boardArr).reshape(3,3)
-
-    # Check the case we've won on a row
-    for row in range(3):
-        if np.abs(boardMat[row,:].sum()) == 3: # Someone won on a row
-            return boardMat[row,0]
-        
-    for col in range(3):
-        if np.abs(boardMat[:,col].sum()) == 3: # Someone won on a column
-            return boardMat[0,col]
-    
-    if np.abs(np.diag(boardMat).sum()) == 3: # Someone won on a diag
-        return boardMat[0,0]
-    
-    if np.abs(np.diag(np.fliplr(boardMat)).sum()) == 3: # Someone won on the other diag
-        return boardMat[0,2]
-    
-    # Return none if no winner
-    return None
+# Write value function dictionary to yaml file
+def writeValueFunction(valueFunction,fileName):
+    with open(fileName,'w') as file:
+        yaml.dump(valueFunction,file,default_flow_style=False)
 
 def findProjectRoot(filename="pyproject.toml"):
     path = Path(__file__).resolve()
     for parent in path.parents:
         if (parent / filename).exists():
             return parent
-        
+
 def generateValueFunctionName():
     # Read toml file
     with open('pyproject.toml','rb') as f:
@@ -160,6 +112,7 @@ def generateValueFunctionName():
     if not os.path.isdir(valueFunDir):
         os.makedirs(valueFunDir, exist_ok=True)
         valFunPath = os.path.join(valueFunDir,ver+"_A.yaml")
+        print(valFunPath)
         return valFunPath
 
     filenames = os.listdir(valueFunDir)
@@ -170,15 +123,13 @@ def generateValueFunctionName():
     
     fname = ver + '_' + chr(ord(max(suffix)) + 1)
     valFunPath = os.path.join(valueFunDir,fname)
+    print(valFunPath)
     return valFunPath
     
-def main():
-    # valueFunction = initValueFunction()
-    # writeValueFunction(valueFunction)
-    # valueFunction = loadValueFunction('valueFunction.yaml')
-    # countWinningStates(valueFunction)
-    fname = generateValueFunctionName()
-    print(fname)
+    
+    
 
-if __name__ == "__main__":
-    main()
+    
+
+
+

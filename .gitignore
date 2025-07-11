@@ -18,6 +18,7 @@ venv/
 
 # Testing and caching
 .cache/
+valueFunctions/
 
 # Jupyter notebook metadata
 .ipynb_checkpoints/
