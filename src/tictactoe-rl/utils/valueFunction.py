@@ -5,6 +5,7 @@ import board
 import tomli
 import os
 from pathlib import Path
+import board
 
 # Initialize value function
 def initValueFunction():
@@ -16,67 +17,64 @@ def initValueFunction():
     # Create dict for value Function
     valueFunction = {}
 
-    stateStack = [
-        '[0,0,0,0,0,0,0,0,0]',
-        '[0,0,0,0,0,0,0,0,0]'
-    ]
-    actorStack = [1,-1]
+    actorCases = [1,-1]
 
-    visitedStates = set()
-    winningStates = set()
-    losingStates = set()
-    tieStates = set()
-     
-    # Iteratively build all future states
-    while stateStack:
-        # Get the current state and turn
-        curStateStr = stateStack.pop()
-        curActor = actorStack.pop()
+    # Do both starting cases
+    for starter in actorCases:
+        # Track visited states
+        visitedStates = set()
+        # Initialize state stack
+        stateStack = ['[0,0,0,0,0,0,0,0,0]']
+        # Iteratively build cases
+        while stateStack: 
+            # Get the current state and turn
+            curStateStr = stateStack.pop()
 
-        # Check that it's not already accounted for
-        if (curStateStr,curActor) in visitedStates:
-            continue
+            # Check that it's not already accounted for
+            # if (curStateStr != '[0,0,0,0,0,0,0,0,0]') & ((curStateStr) in visitedStates):
+            if ((curStateStr) in visitedStates):
+                continue
 
-        # Turn it into a numerical array
-        curStateNum = ast.literal_eval(curStateStr)
+            # Add current state to visited states
+            visitedStates.add(curStateStr)
 
-        # Get number of open spaces
-        openSpaces = [ii for ii, num in enumerate(curStateNum) if num == 0]
+            # Turn it into a numerical array
+            curStateNum = ast.literal_eval(curStateStr)
 
-        # Generate next states and create value function entry
-        subDict = {}
-        nextStates = []
-        nextActors = []
-        for space in openSpaces:
-            nextState = curStateNum.copy()
-            nextState[space] = curActor
-            nextStateStr = str(nextState).replace(" ","")
-            winner = board.threeAcross(nextStateStr)
-            if winner == 1: # The agent won
-                subDict[nextStateStr] = 1
-                winningStates.add(nextStateStr)
-            elif winner == -1: # The opponent won
-                subDict[nextStateStr] = 0
-                losingStates.add(nextStateStr)
-            elif 0 not in nextState: # The game is a draw
-                subDict[nextStateStr] = 0
-                tieStates.add(nextStateStr)
-            else: # No winner yet
-                subDict[nextStateStr] = 0.5
-                nextStates.append(nextStateStr)
-                nextActors.append(curActor * -1)
+            # Get number of open spaces
+            openSpaces = [ii for ii, num in enumerate(curStateNum) if num == 0]
 
-        valueFunction[curStateStr] = {
-            'actions' : subDict,
-            'actor' : curActor
-        }
+            # Check who's move it is
+            if (9-len(openSpaces)) % 2 == 0: # Odd, starters turn
+                actor = starter
+            else: # Even, not starters turn
+                actor = starter * -1
 
-        # Push set of next states and actors to stack
-        for ii in range(len(nextStates)):
-            stateStack.append(nextStates[ii])
-            actorStack.append(nextActors[ii])
+            # Set flag to continue game
+            continueGame = False
 
-        visitedStates.add((curStateStr,curActor))
+            # Check if this state ends the game
+            winner = board.threeAcross(curStateStr)
+            if winner == 1: # Agent wins
+                curValue = 1
+            elif winner == -1: # Opponent wins
+                curValue = 0
+            elif len(openSpaces) == 0: # Game is a draw
+                curValue = 0
+            else: #  No winner yet
+                curValue = 0.5
+                continueGame = True
+
+            # Add state to value function
+            valueFunction[curStateStr] = curValue
+
+            # Add next set of states to the stack
+            if continueGame:
+                for space in openSpaces:
+                    nextState = curStateNum.copy()
+                    nextState[space] = actor
+                    nextStateStr = str(nextState).replace(" ","")
+                    stateStack.append(nextStateStr)
 
     return valueFunction
 
@@ -97,6 +95,32 @@ def findProjectRoot(filename="pyproject.toml"):
     for parent in path.parents:
         if (parent / filename).exists():
             return parent
+        
+def getLatestValueFunction():
+    # Read toml file
+    with open('pyproject.toml','rb') as f:
+        config = tomli.load(f)
+    
+    # Extract the version
+    ver = config['project']['version']
+
+    # Check if folder exists and create a new name
+    rootDir = findProjectRoot()
+    valueFunDir = os.path.join(rootDir,"valueFunctions")
+
+    # Check for empty directory
+    if os.path.isdir(valueFunDir) and not os.listdir(valueFunDir):
+        return None
+    
+    # Get latest version
+    filenames = os.listdir(valueFunDir)
+    matches = [f for f in filenames if ver in f]
+    suffix = []
+    for match in matches:
+        suffix.append(match.split('.yaml')[0].split('_')[-1])
+    curSuf = chr(ord(max(suffix)))
+    fname = ver + '_' + curSuf + ".yaml"
+    return os.path.join(valueFunDir,fname)
 
 def generateValueFunctionName():
     # Read toml file
@@ -123,7 +147,7 @@ def generateValueFunctionName():
     
     fname = ver + '_' + chr(ord(max(suffix)) + 1)
     valFunPath = os.path.join(valueFunDir,fname)
-    print(valFunPath)
+    # print(valFunPath)
     return valFunPath
     
     

@@ -5,14 +5,6 @@ import ast
 import tomli
 from pathlib import Path
 
-
-# Function to check if a directory exists
-def dirExists(dirPath):
-    if os.path.isdir(dirPath):
-        return True
-    else:
-        return False
-
 # Initialize value function
 def initValueFunction():
     # Note: The mapping in the following way
@@ -23,73 +15,66 @@ def initValueFunction():
     # Create dict for value Function
     valueFunction = {}
 
-    stateStack = [
-        '[0,0,0,0,0,0,0,0,0]',
-        '[0,0,0,0,0,0,0,0,0]'
-    ]
-    actorStack = [1,-1]
-
+    actorCases = [1,-1]
     visitedStates = set()
-    winningStates = set()
-    losingStates = set()
-    tieStates = set()
-     
-    # Iteratively build all future states
-    while stateStack:
-        # Get the current state and turn
-        curStateStr = stateStack.pop()
-        curActor = actorStack.pop()
 
-        # Check that it's not already accounted for
-        if (curStateStr,curActor) in visitedStates:
-            continue
+    # Do both starting cases
+    for starter in actorCases:
+        # Track visited states
+        visitedStates = set()
+        # Initialize state stack
+        stateStack = ['[0,0,0,0,0,0,0,0,0]']
+        # Iteratively build cases
+        while stateStack: 
+            # Get the current state and turn
+            curStateStr = stateStack.pop()
 
-        # Turn it into a numerical array
-        curStateNum = ast.literal_eval(curStateStr)
+            # Check that it's not already accounted for
+            # if (curStateStr != '[0,0,0,0,0,0,0,0,0]') & ((curStateStr) in visitedStates):
+            if ((curStateStr) in visitedStates):
+                continue
 
-        # Get number of open spaces
-        openSpaces = [ii for ii, num in enumerate(curStateNum) if num == 0]
+            # Add current state to visited states
+            visitedStates.add(curStateStr)
 
-        # Generate next states and create value function entry
-        subDict = {}
-        nextStates = []
-        nextActors = []
-        for space in openSpaces:
-            nextState = curStateNum.copy()
-            nextState[space] = curActor
-            nextStateStr = str(nextState).replace(" ","")
-            winner = threeAcross(nextStateStr)
-            if winner == 1: # The agent won
-                subDict[nextStateStr] = 1
-                winningStates.add(nextStateStr)
-            elif winner == -1: # The opponent won
-                subDict[nextStateStr] = 0
-                losingStates.add(nextStateStr)
-            elif 0 not in nextState: # The game is a draw
-                subDict[nextStateStr] = 0
-                tieStates.add(nextStateStr)
-            else: # No winner yet
-                subDict[nextStateStr] = 0.5
-                nextStates.append(nextStateStr)
-                nextActors.append(curActor * -1)
+            # Turn it into a numerical array
+            curStateNum = ast.literal_eval(curStateStr)
 
-        valueFunction[curStateStr] = {
-            'actions' : subDict,
-            'actor' : curActor
-        }
+            # Get number of open spaces
+            openSpaces = [ii for ii, num in enumerate(curStateNum) if num == 0]
 
-        # Push set of next states and actors to stack
-        for ii in range(len(nextStates)):
-            stateStack.append(nextStates[ii])
-            actorStack.append(nextActors[ii])
+            # Check who's move it is
+            if (9-len(openSpaces)) % 2 == 0: # Odd, starters turn
+                actor = starter
+            else: # Even, not starters turn
+                actor = starter * -1
 
-        visitedStates.add((curStateStr,curActor))
+            # Set flag to continue game
+            continueGame = False
 
-    # print("Visited states: {}",len(visitedStates))
-    # print("Winning states: {}",len(winningStates))
-    # print("Losing states:  {}",len(losingStates))
-    # print("Tie states:     {}",len(tieStates))
-    # print("Total states:   {}",len(visitedStates)+len(winningStates)+len(losingStates)+len(tieStates))
+            # Check if this state ends the game
+            winner = threeAcross(curStateStr)
+            if winner == 1: # Agent wins
+                curValue = 1
+            elif winner == -1: # Opponent wins
+                curValue = 0
+            elif len(openSpaces) == 0: # Game is a draw
+                curValue = 0
+            else: #  No winner yet
+                curValue = 0.5
+                continueGame = True
+
+            # Add state to value function
+            valueFunction[curStateStr] = curValue
+
+            # Add next set of states to the stack
+            if continueGame:
+                for space in openSpaces:
+                    nextState = curStateNum.copy()
+                    nextState[space] = actor
+                    nextStateStr = str(nextState).replace(" ","")
+                    stateStack.append(nextStateStr)
+        print(len(visitedStates))
     return valueFunction
 
 def countWinningStates(valueFunction):
@@ -163,22 +148,33 @@ def generateValueFunctionName():
         return valFunPath
 
     filenames = os.listdir(valueFunDir)
+    if len(filenames) == 0:
+        os.makedirs(valueFunDir, exist_ok=True)
+        valFunPath = os.path.join(valueFunDir,ver+"_A.yaml")
+        return valFunPath
+    
     matches = [f for f in filenames if ver in f]
     suffix = []
     for match in matches:
         suffix.append(match.split('.yaml')[0].split('_')[-1])
     
-    fname = ver + '_' + chr(ord(max(suffix)) + 1)
+    fname = ver + '_' + chr(ord(max(suffix)) + 1) + '.yaml'
     valFunPath = os.path.join(valueFunDir,fname)
     return valFunPath
     
 def main():
-    # valueFunction = initValueFunction()
-    # writeValueFunction(valueFunction)
-    # valueFunction = loadValueFunction('valueFunction.yaml')
-    # countWinningStates(valueFunction)
+    valueFunction = initValueFunction()
     fname = generateValueFunctionName()
     print(fname)
+    print(len(valueFunction))
+    # print(valueFunction['[1,-1,1,-1,0,0,0,0,0]'])
+    # print(valueFunction['[-1,1,-1,1,0,0,0,0,0]'])
+    writeValueFunction(valueFunction,fname)
+    # valueFunction = loadValueFunction('valueFunction.yaml')
+    # countWinningStates(valueFunction)
+
+    ## Change to only save agent actions ... we have duplicates
+    
 
 if __name__ == "__main__":
     main()
