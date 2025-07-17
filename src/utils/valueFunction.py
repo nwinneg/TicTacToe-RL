@@ -1,11 +1,11 @@
 import numpy as np
 import yaml
 import ast
-import board
+from utils import board
 import tomli
 import os
 from pathlib import Path
-import board
+import json
 
 # Initialize value function
 def initValueFunction():
@@ -145,12 +145,60 @@ def generateValueFunctionName():
     for match in matches:
         suffix.append(match.split('.yaml')[0].split('_')[-1])
     
-    fname = ver + '_' + chr(ord(max(suffix)) + 1)
+    fname = ver + '_' + chr(ord(max(suffix)) + 1) + ".yaml"
     valFunPath = os.path.join(valueFunDir,fname)
     # print(valFunPath)
     return valFunPath
+
+# Wrapper function to generate a new value function
+def createNewValueFunction():
+    # Init a value function
+    vfNew = initValueFunction()
+
+    # Get a new name
+    fpath = generateValueFunctionName()
+    fname = os.path.splitext(os.path.basename(fpath))[0]
+
+    # Generate new json tracking entry
+    rootDir = findProjectRoot()
+    trackerPath = os.path.join(rootDir,"valueFunctions","gamesPlayed.json")
+    if Path(trackerPath).exists():
+        with open(trackerPath,'r') as f:
+            tracker = json.load(f)
+    else:
+        tracker = {}
     
+    tracker[fname] = 0
+
+    # Write value function and tracker
+    writeValueFunction(vfNew,fpath)
+    with open(trackerPath,'w') as f:
+        json.dump(tracker,f,indent=4)
+
+def getGamesPlayed(vfname):
+    # Read tracker file
+    rootDir = findProjectRoot()
+    trackerPath = os.path.join(rootDir,"valueFunctions","gamesPlayed.json")
+    if Path(trackerPath).exists():
+        with open(trackerPath,'r') as f:
+            tracker = json.load(f)
     
+    return tracker[vfname]
+
+def incrementGamesPlayed(vfname):
+    # Read tracker file
+    rootDir = findProjectRoot()
+    trackerPath = os.path.join(rootDir,"valueFunctions","gamesPlayed.json")
+    if Path(trackerPath).exists():
+        with open(trackerPath,'r') as f:
+            tracker = json.load(f)
+    
+    tracker[vfname] += 1
+    with open(trackerPath,'w') as f:
+        json.dump(tracker,f,indent=4)
+
+    
+
     
 
     

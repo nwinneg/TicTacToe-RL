@@ -7,4 +7,4 @@ for the Tic Tac Toe game.
 """
 
 from . import utils
-from . import rl_init
+from . import training

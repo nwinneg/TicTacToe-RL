@@ -1,0 +1,16 @@
+{
+    "manual" : {
+        "agent" : "0.1.0_A",
+        "playerSymbol" : "X",
+        "alpha" : 0.1,
+        "pctExplore" : 10,
+        "numberOfGames" : 200
+    },
+    "auto" : {
+        "agent1" : "",
+        "agent2" : "",
+        "alpha" : 0.1,
+        "pctExplore" : 10,
+        "numberOfGames" : 200
+    }
+}

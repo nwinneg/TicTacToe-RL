@@ -7,7 +7,7 @@ import ast
 
 sys.path.append(os.path.abspath("src/tictactoe-rl/utils"))
 # import board, policy, valueFunction
-import board, policy, valueFunction as vf
+from utils import board, policy, valueFunction as vf
 
 def agentMakeMove(curState,starter,valueFunction,explore):
     # Get list of next states and associated values
@@ -102,7 +102,7 @@ def gameplay(valueFunction, alpha, pctExplore, starter):
             continue
             
         # Update value function if exploratory
-        if ~exploratory:
+        if not exploratory:
             valueFunction = updateValueFunction(valueFunction,prevState,nextState,alpha)
 
         # Reset states
@@ -121,7 +121,7 @@ def gameplay(valueFunction, alpha, pctExplore, starter):
             valueFunction = updateValueFunction(valueFunction,nextState,curState,alpha)
             board.showBoardXO(curState,playerSymbol)
             continue
-        
+
         if board.isdraw(curState):
             print("Draw!")
             continueGame = False
@@ -138,7 +138,7 @@ def main():
     
     alpha = 0.1
     pctExplore = 10
-    starter = -1
+    starter = 1
     valueFunction = gameplay(valueFunction,alpha,pctExplore,starter)
 
     lst = valueFunction.values()

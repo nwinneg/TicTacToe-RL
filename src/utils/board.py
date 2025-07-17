@@ -1,5 +1,6 @@
 import ast
-import numpy as np
+import numpy as np # type: ignore
+import random
 
 # Function to check if there are 3 across - We can win on a row, a column, or one of the diagonals
 def threeAcross(boardStateString): # Returns winner (-1 or 1) if there is a winner, otherwise returns None
@@ -25,7 +26,8 @@ def threeAcross(boardStateString): # Returns winner (-1 or 1) if there is a winn
     # Return none if no winner
     return None
 
-def isdraw(boardStateString): # Returns true if draw
+# Returns true if the game is a draw
+def isdraw(boardStateString): 
     boardArr = ast.literal_eval(boardStateString)
     openSpaces = [ii for ii, num in enumerate(boardArr) if num == 0]
     if len(openSpaces) == 0:
@@ -60,6 +62,7 @@ def showBoard(boardStr):
     boardNum = ast.literal_eval(boardStr)
     print(np.array(boardNum).reshape(3,3))
 
+# Function to visualize a board state with X's and O's
 def showBoardXO(boardStr,playerSymbol):
     # Convert to array of strings
     boardNum = ast.literal_eval(boardStr)
@@ -79,3 +82,26 @@ def showBoardXO(boardStr,playerSymbol):
     print(board[3] + " | " + board[4] + " | " + board[5])
     print("--+---+--")
     print(board[6] + " | " + board[7] + " | " + board[8])
+
+# Function to facilitate the player making a move
+def playerMakeMove(curState):
+    # Show the player the board
+    boardNum = ast.literal_eval(curState)
+
+    # Get input from the player
+    valueInput = False
+    while not valueInput:
+        playerInput = input("Enter move: ")
+        try:
+            playerInput = int(playerInput)
+        except:
+            print('Input must be a single digit integer from 1-9')
+        if boardNum[playerInput-1] == 0: # Valid move
+            valueInput = True
+        else: # Not valud move
+            print('Please choose an empty square')
+    
+    # Input player move and return next state as string
+    boardNum[playerInput - 1] = -1
+    nextState = str(boardNum).replace(" ","")
+    return nextState
