@@ -7,10 +7,15 @@
         "numberOfGames" : 200
     },
     "auto" : {
-        "agent1" : "",
-        "agent2" : "",
+        "agent1" : "0.1.0_A",
+        "agent2" : "0.1.0_B",
         "alpha" : 0.1,
-        "pctExplore" : 10,
-        "numberOfGames" : 200
+        "pctExplore" : 25,
+        "numberOfGames" : 100000
+    },
+    "test" : {
+        "agent" : "0.1.0_B",
+        "starter": -1,
+        "playerSymbol" : "X"
     }
 }

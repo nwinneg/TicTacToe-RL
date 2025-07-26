@@ -60,6 +60,7 @@ def updateValueFunction(valueFunction,prevState,curState,alpha):
     return valueFunction
 
 # TODO: Function to set alpha based on number of games
-def setAlpha(alpha,ratio):
-    return alpha * ratio
+def setAlpha(alpha,gamesPlayed):
+    totalGames = 1000000
+    return alpha * ( ( totalGames - gamesPlayed) / (totalGames) )
     

@@ -7,4 +7,4 @@ for the Tic Tac Toe game. Manual training is one agent playing against a human. 
 is two agents playing against one another.
 """
 
-from . import utils
+# from . import utils

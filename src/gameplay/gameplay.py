@@ -7,6 +7,7 @@ import yaml # type: ignore
 import json
 import random
 import ast
+from training.manualTraining import parseConfigJson
 
 def parseConfigJson():
     # Get the project root
@@ -17,46 +18,25 @@ def parseConfigJson():
         config = json.load(f)
     
     # Print the config
-    return config["manual"]
-
-def writeConfigJson(manualConfig):
-    # Get the project root
-    baseDir = vf.findProjectRoot()
-
-    # Parse training config
-    with open(os.path.join(baseDir,"trainingConfig.json"),'r') as f:
-        config = json.load(f)
-    
-    config["manual"] = manualConfig
-
-    with open(os.path.join(baseDir,"trainingConfig.json"),'w') as f:
-        json.dump(config,f,indent=4)
+    return config["test"]
 
 def playGame():
-    # Load the confi
+    # Load the config
     config = parseConfigJson()
 
     # Initialize new agent if left empty
     if config["agent"] == "":
-        vf.createNewValueFunction()
-        newName = vf.getLatestValueFunction()
-        config["agent"] = os.path.splitext(os.path.basename(newName))[0]
-        writeConfigJson(config)
-
+        vfPath = vf.getLatestValueFunction()
+    else:
+        vfPath = os.path.join(str(vf.findProjectRoot()),'valueFunctions',config["agent"] + ".yaml")
+    
     # Load the value function
-    vfPath = os.path.join(str(vf.findProjectRoot()),'valueFunctions',config["agent"] + ".yaml")
     valFun = vf.loadValueFunction(vfPath)
+    config["agent"] = os.path.splitext(os.path.basename(vfPath))[0]
 
     # Get games played, alpha, and pctExplore
     gamesPlayed = vf.getGamesPlayed(config["agent"])
-    alpha = policy.setAlpha(config["alpha"],gamesPlayed/config["numberOfGames"])
-    pctExplore = config["pctExplore"]
-
-    # Set who goes first (we alternate)
-    if gamesPlayed % 2 == 0:
-        starter = -1
-    else:
-        starter = 1
+    starter = config["starter"]
 
     # Initialize board
     prevState = '[0,0,0,0,0,0,0,0,0]'
@@ -67,7 +47,7 @@ def playGame():
         board.showBoardXO(prevState,playerSymbol)
         curState = board.playerMakeMove(prevState)
     else:
-        prevState = policy.agentMakeMoveTrain(prevState,starter,valFun,policy.explore(pctExplore))
+        prevState = policy.agentMakeMoveTest(prevState,starter,valFun)
         board.showBoardXO(prevState,playerSymbol)
         curState = board.playerMakeMove(prevState)
         board.showBoardXO(curState,playerSymbol)
@@ -75,15 +55,14 @@ def playGame():
     continueGame = True
     while continueGame:
         # Decide if this move is exploratory
-        exploratory = policy.explore(pctExplore)
+        exploratory = False
 
         # Make agent move
-        nextState = policy.agentMakeMoveTrain(curState,starter,valFun,exploratory)
-        
+        nextState = policy.agentMakeMoveTest(curState,starter,valFun)
+
         # Check for winner
         winner = board.threeAcross(nextState)
         if winner is not None:
-            valFun = policy.updateValueFunction(valFun,prevState,nextState,alpha)
             if winner == -1:
                 print("Player Wins!")
             else:
@@ -93,14 +72,9 @@ def playGame():
             continue
         if board.isdraw(nextState):
             print("Draw!")
-            valFun = policy.updateValueFunction(valFun,prevState,nextState,alpha)
             continueGame = False
             board.showBoardXO(nextState,playerSymbol)
             continue
-            
-        # Don't update value function if exploratory
-        if not exploratory:
-            valFun = policy.updateValueFunction(valFun,prevState,nextState,alpha)
 
         # Reset states
         prevState = nextState
@@ -115,18 +89,13 @@ def playGame():
             else:
                 print("Agent Wins!")
             continueGame = False
-            valFun = policy.updateValueFunction(valFun,nextState,curState,alpha)
             board.showBoardXO(curState,playerSymbol)
             continue
 
         if board.isdraw(curState):
             print("Draw!")
             continueGame = False
-            valFun = policy.updateValueFunction(valFun,nextState,curState,alpha)
             board.showBoardXO(curState,playerSymbol)
-
-    vf.writeValueFunction(valFun,vfPath)
-    vf.incrementGamesPlayed(config["agent"])
 
     playerInput = input("\nPlay again> (y/n): ")
     if playerInput.lower() == "y":
